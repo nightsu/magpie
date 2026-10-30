@@ -223,8 +223,20 @@ func kimiIn(at place) *Agent {
 	get := func() string { v, _ := edit.GetTOMLTop(path, "default_model"); return v }
 	providerTable := "providers." + magpieID
 	writeMagpie := func() error {
+		typ := "kimi"
+		if !legacy {
+			// Kimi Code's OpenAI choice uses the same Chat endpoint and
+			// stays through catalog syncs and model picks (#2846).
+			t, err := edit.GetTOMLTable(path, providerTable)
+			if err != nil {
+				return err
+			}
+			if t["type"] == "openai" {
+				typ = "openai"
+			}
+		}
 		if err := kimiProvider(path, providerTable,
-			edit.KV{Path: "type", Value: "kimi"},
+			edit.KV{Path: "type", Value: typ},
 			edit.KV{Path: "base_url", Value: at.v1()},
 			edit.KV{Path: "api_key", Value: at.gwKey()},
 		); err != nil {
